@@ -53,6 +53,9 @@ class Circuit:
 	def getWires(self):
 		return self.wires.keys()
 
+	def getPathMatrixSize(self):
+		return self.ROWS*self.COLS
+
 	def getWirePosition(self, wireName):
 		if wireName not in self.wires:
 			print ("Error: " + wireName + " does not exists")
@@ -115,17 +118,16 @@ class Circuit:
 			length += wire.length
 		return length
 
+	def getCompletedWires(self):
+		amount = 0
+		for wire in wires:
+			if wire.connected:
+				amount += 1
+		return amount
+
 	def printPathMatrix(self):
 		for row in self.pathM:
 			print (row)
 
-c = Circuit()
-c.start()
-wires = c.getWires()
-c.printPathMatrix()
-for x in range(3):
-	for w in wires:
-		print (c.getWirePosition(w))
-		c.moveNorth(w)
-print("-------------------------")
-c.printPathMatrix()
+	def getFitness(self):
+		return getCompletedWires()*50 - getWireLength()*2 - getTotalTurns()
