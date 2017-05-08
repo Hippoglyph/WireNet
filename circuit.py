@@ -1,4 +1,5 @@
 import ast
+import copy
 
 class Wire:
 	def __init__(self, name, startC, startR, goalC, goalR, color):
@@ -40,7 +41,7 @@ class Circuit:
 
 	def start(self):
 		self.wires.clear()
-		self.pathM = self.pathM_.copy()
+		self.pathM = copy.deepcopy(self.pathM_)
 		wireIndex = 0
 		for key in self.wirePoints.keys():
 			name = "Wire"+str(wireIndex)
@@ -48,7 +49,7 @@ class Circuit:
 			wireIndex+=1
 
 	def restart(self):
-		start()
+		self.start()
 
 	def getWires(self):
 		return self.wires.keys()
@@ -56,10 +57,21 @@ class Circuit:
 	def getPathMatrixSize(self):
 		return self.ROWS*self.COLS
 
+	def getRows(self):
+		return self.ROWS
+
+	def getCols(self):
+		return self.COLS
+
 	def getWirePosition(self, wireName):
 		if wireName not in self.wires:
 			print ("Error: " + wireName + " does not exists")
 		return (self.wires[wireName].r,self.wires[wireName].c)
+
+	def getWireGoal(self, wireName):
+		if  wireName not in self.wires:
+			print ("Error: " + wireName + " does not exists")
+		return (self.wires[wireName].goalR, self.wires[wireName].goalC)
 
 	def getPathMatrix(self):
 		return self.pathM
@@ -101,33 +113,34 @@ class Circuit:
 		return self.move(wireName, 0, 1)
 
 	def isDone(self):
-		for wire in wires:
-			if not wire.connected:
+		for wire in self.wires:
+			if not self.wires[wire].connected:
 				return False
 		return True
 
 	def getTotalTurns(self):
 		turns = 0
-		for wire in wires:
-			turns += wire.amountTurns
+		for wire in self.wires:
+			turns += self.wires[wire].amountTurns
 		return turns
 
 	def getWireLength(self):
 		length = 0
-		for wire in wires:
-			length += wire.length
+		for wire in self.wires:
+			length += self.wires[wire].length
 		return length
 
 	def getCompletedWires(self):
 		amount = 0
-		for wire in wires:
-			if wire.connected:
+		for wire in self.wires:
+			if self.wires[wire].connected:
 				amount += 1
 		return amount
 
-	def printPathMatrix(self):
-		for row in self.pathM:
+	def printPathMatrix(self, m):
+		for row in m:
 			print (row)
+		print ("------")
 
 	def getFitness(self):
-		return getCompletedWires()*50 - getWireLength()*2 - getTotalTurns()
+		return self.getCompletedWires()*50 - self.getWireLength()*2 - self.getTotalTurns()
