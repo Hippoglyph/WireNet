@@ -64,17 +64,20 @@ def astar(start,dest,matrix):
         for node in neighbours(current,matrix):
             if node in closedSet:
                 continue
-            tentgscore = current.gcost + 1
-            if node not in openSet:
+            if node in openSet:
+                tentativegscore = current.gcost + 1
+                if node.gcost > tentativegscore:
+                    node.gcost = tentativegscore
+                    node.parent = current
+            else:
+                node.gcost = current.gcost + 1
+                node.fcost = node.gcost + manhattan(node,dest)
+                node.parent = current
                 openSet.add(node)
-            elif tentgscore >= node.gcost:
-                continue
-            node.parent=current
-            node.gcost=tentgscore
-            node.fcost=node.gcost + manhattan(node,dest)
+            
                                          
-
 
 
             
 A = AStarHandler()
+print(neighbours(A.matrix[5][4], A.matrix))
