@@ -4,6 +4,7 @@ from circuit import Circuit
 import fileinput
 import sys
 import re
+import visualize
 
 class neatHandler:
     def __init__(self):
@@ -69,12 +70,12 @@ class neatHandler:
             for i in row:
                 inputs.append(i)
         for wire in self.wireNames:
-            wirePos = self.circuit.getWirePosition(wire)
-            inputs.append(wirePos[0] / self.circuit.getRows())
-            inputs.append(wirePos[1] / self.circuit.getCols())
-            wireGoal = self.circuit.getWireGoal(wire)
-            inputs.append(wireGoal[0] / self.circuit.getRows())
-            inputs.append(wireGoal[1] / self.circuit.getCols())
+            srow,scol = self.circuit.getWirePosition(wire)
+            inputs.append(srow / self.circuit.getRows())
+            inputs.append(scol / self.circuit.getCols())
+            grow,gcol = self.circuit.getWireGoal(wire)
+            inputs.append(grow / self.circuit.getRows())
+            inputs.append(gcol / self.circuit.getCols())
         return inputs
 
 
@@ -93,7 +94,19 @@ class neatHandler:
         p.add_reporter(stats)
 
         # Run for up to 300 generations.
-        winner = p.run(self.eval_genomes, 1)
+        winner = p.run(self.eval_genomes, 1000)
+        self.evalNet(neat.nn.FeedForwardNetwork.create(winner, config))
+        os.system("/usr/bin/canberra-gtk-play --id='bell'")
+
+        visualize.draw_net(config, winner, True)
+        visualize.plot_stats(stats, ylog=False, view=True)
+        visualize.plot_species(stats, view=True)
+
+        print("Turns: " + str(self.circuit.getTotalTurns()))
+        print("WireLength: "+str(self.circuit.getWireLength()))
+        print("Completed Wires: "+str(self.circuit.getCompletedWires()))
+        print("Fitness: "+str(self.circuit.getFitness()))
+        self.circuit.drawResult()
 
         # Display the winning genome.
         #print('\nBest genome:\n{!s}'.format(winner))
