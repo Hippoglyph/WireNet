@@ -28,6 +28,10 @@ class neatHandler:
             sys.stdout.write(line)
         print ("Config file edited")
 
+    def insertGenome(self, genome, config):
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+        self.evalNet(net)
+
     def eval_genomes(self, genomes, config):
         for genome_id, genome in genomes:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -93,7 +97,14 @@ class neatHandler:
         p.add_reporter(stats)
 
         # Run for up to 300 generations.
-        winner = p.run(self.eval_genomes, 1)
+        winner = p.run(self.eval_genomes, 1000)
+        self.insertGenome(winner, config)
+        print("Turns: " + str(self.circuit.getTotalTurns()))
+        print("WireLength: "+str(self.circuit.getWireLength()))
+        print("Completed Wires: "+str(self.circuit.getCompletedWires()))
+        print("Fitness: "+str(self.circuit.getFitness()))
+        os.system("/usr/bin/canberra-gtk-play --id='bell'")
+        self.circuit.drawResult()
 
         # Display the winning genome.
         #print('\nBest genome:\n{!s}'.format(winner))

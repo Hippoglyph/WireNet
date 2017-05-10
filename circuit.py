@@ -1,5 +1,6 @@
 import ast
 import copy
+import tkinter as tk
 
 class Wire:
 	def __init__(self, name, startC, startR, goalC, goalR, color):
@@ -17,6 +18,7 @@ class Wire:
 		self.connected = False
 		self.color = color
 		self.path = []
+		self.path.append((self.r,self.c))
 
 
 class Circuit:
@@ -69,7 +71,7 @@ class Circuit:
 		return (self.wires[wireName].r,self.wires[wireName].c)
 
 	def getWireGoal(self, wireName):
-		if  wireName not in self.wires:
+		if wireName not in self.wires:
 			print ("Error: " + wireName + " does not exists")
 		return (self.wires[wireName].goalR, self.wires[wireName].goalC)
 
@@ -93,9 +95,9 @@ class Circuit:
 			wire.directionC = colOff
 			wire.directionR = rowOff
 		wire.length += 1
-		wire.path.append((wire.r,wire.c))
 		wire.c += colOff
 		wire.r += rowOff
+		wire.path.append((wire.r,wire.c))
 		if(wire.c == wire.goalC and wire.r == wire.goalR):
 			wire.connected = True
 		return True
@@ -137,10 +139,66 @@ class Circuit:
 				amount += 1
 		return amount
 
-	def printPathMatrix(self, m):
-		for row in m:
+	def printPathMatrix(self):
+		print("--------")
+		for row in self.pathM:
 			print (row)
-		print ("------")
+		print("--------")
 
 	def getFitness(self):
 		return self.getCompletedWires()*50 - self.getWireLength()*2 - self.getTotalTurns()
+
+	def drawResult(self):
+		c = None
+		root = tk.Tk()
+		root.wm_title("WireNet - Result")
+		buttonFrame = tk.Frame(root)
+		buttonFrame.grid(row=2, column=0, columnspan=2)
+		tk.Button(buttonFrame, text="Draw Base", command=lambda: self.drawBase(c, root)).grid(row=0, column=0)
+		tk.Button(buttonFrame, text="Draw Wired", command=lambda: self.drawWired(c, root)).grid(row=0, column=1)
+		buttonFrame.pack()
+		c = tk.Canvas(root, width=500, height=500,   background='white')
+		c.pack()
+		root.update()
+		self.drawWired(c, root)
+		root.mainloop()
+
+	def drawBase(self, canvas, root):
+		canvas.delete("all")
+		col_width = canvas.winfo_width()/self.COLS
+		row_height = canvas.winfo_height()/self.ROWS
+		for row in range(self.ROWS):
+			for col in range(self.COLS):
+				color = self.pathM_[row][col]
+				if color == 0:
+					color = "white"
+				elif color == 1:
+					color = "black"
+				canvas.create_rectangle(col*col_width, row*row_height, (col+1)*col_width, (row+1)*row_height, fill=color, outline="black")
+		for wireName in self.wires:
+			wire = self.wires[wireName]
+			color = wire.color
+			canvas.create_rectangle(wire.startC*col_width, wire.startR*row_height, (wire.startC+1)*col_width, (wire.startR+1)*row_height, fill=color, outline="black")
+			canvas.create_rectangle(wire.goalC*col_width, wire.goalR*row_height, (wire.goalC+1)*col_width, (wire.goalR+1)*row_height, fill=color, outline="black")
+		root.update()
+
+	def drawWired(self, canvas, root):
+		canvas.delete("all")
+		col_width = canvas.winfo_width()/self.COLS
+		row_height = canvas.winfo_height()/self.ROWS
+		for row in range(self.ROWS):
+			for col in range(self.COLS):
+				color = self.pathM_[row][col]
+				if color == 0:
+					color = "white"
+				elif color == 1:
+					color = "black"
+				canvas.create_rectangle(col*col_width, row*row_height, (col+1)*col_width, (row+1)*row_height, fill=color, outline="black")
+		for wireName in self.wires:
+			wire = self.wires[wireName]
+			color = wire.color
+			for wirePath in wire.path:
+				canvas.create_rectangle(wirePath[1]*col_width, wirePath[0]*row_height, (wirePath[1]+1)*col_width, (wirePath[0]+1)*row_height, fill=color, outline="black")
+			canvas.create_rectangle((wire.startC+0.4)*col_width, (wire.startR+0.4)*row_height, (wire.startC+0.6)*col_width, (wire.startR+0.6)*row_height, fill=color, outline="black")
+			canvas.create_rectangle((wire.goalC+0.4)*col_width, (wire.goalR+0.4)*row_height, (wire.goalC+0.6)*col_width, (wire.goalR+0.6)*row_height, fill=color, outline="black")
+		root.update()
