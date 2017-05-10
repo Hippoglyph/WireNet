@@ -197,8 +197,8 @@ class Circuit:
 		for wireName in self.wires:
 			wire = self.wires[wireName]
 			color = wire.color
-			for wirePath in wire.path:
-				canvas.create_rectangle(wirePath[1]*col_width, wirePath[0]*row_height, (wirePath[1]+1)*col_width, (wirePath[0]+1)*row_height, fill=color, outline="black")
+			for row, col in wire.path:
+				canvas.create_rectangle(col*col_width, row*row_height, (col+1)*col_width, (row+1)*row_height, fill=color, outline="black")
 			canvas.create_rectangle((wire.startC+0.4)*col_width, (wire.startR+0.4)*row_height, (wire.startC+0.6)*col_width, (wire.startR+0.6)*row_height, fill=color, outline="black")
 			canvas.create_rectangle((wire.goalC+0.4)*col_width, (wire.goalR+0.4)*row_height, (wire.goalC+0.6)*col_width, (wire.goalR+0.6)*row_height, fill=color, outline="black")
 		root.update()
