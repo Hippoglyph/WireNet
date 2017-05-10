@@ -1,7 +1,9 @@
 import tkinter as tk
 import random
 import sys
-
+from AStarHandler import AStarHandler
+from AStarHandler import manhattan
+from AStarHandler import bfs
 
 
 ROWS = sys.argv[1] if len(sys.argv) > 1 else 10
@@ -150,11 +152,13 @@ color = randomColor()
 root = tk.Tk()
 root.wm_title("Cool AF")
 buttonFrame = tk.Frame(root)
-buttonFrame.grid(row=2, column=0, columnspan=2)
+buttonFrame.grid(row=2, column=0, columnspan=5)
 tk.Button(buttonFrame, text="Reset", command=reset).grid(row=0, column=0)
 tk.Button(buttonFrame, text="Increase grid size", command=increaseSize).grid(row=0, column=1)
 tk.Button(buttonFrame, text="Decrease grid size", command=decreaseSize).grid(row=0, column=2)
 tk.Button(buttonFrame, text="Create output", command=createOutputArray).grid(row=0, column=3)
+tk.Button(buttonFrame, text="AStar", command=lambda: AStarHandler(manhattan)).grid(row=0,column=4)
+tk.Button(buttonFrame, text="BFS", command=lambda: AStarHandler(bfs)).grid(row=0,column=5)
 buttonFrame.pack()
 
 
