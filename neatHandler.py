@@ -16,6 +16,8 @@ class neatHandler:
         self.numInputs = self.circuit.getPathMatrixSize() + len(self.wireNames)*4
         self.numOutputs = len(self.wireNames)*4
         self.editConfig(config_path)
+        self.bestFitness = -999999
+        self.stats = None
         self.run(config_path)
 
     def editConfig(self, config_path):
@@ -33,6 +35,11 @@ class neatHandler:
         for genome_id, genome in genomes:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             genome.fitness = self.evalNet(net)
+            if self.bestFitness < genome.fitness:
+                self.bestFitness = genome.fitness
+                print("New Best Fitness: "+str(self.circuit.getFitness()))
+                self.circuit.drawResult()
+                visualize.plot_stats(self.stats, ylog=False, view=True)
             
     def evalNet(self, net):
         self.circuit.restart()
@@ -90,17 +97,17 @@ class neatHandler:
 
         # Add a stdout reporter to show progress in the terminal.
         p.add_reporter(neat.StdOutReporter(True))
-        stats = neat.StatisticsReporter()
-        p.add_reporter(stats)
+        self.stats = neat.StatisticsReporter()
+        p.add_reporter(self.stats)
 
         # Run for up to 300 generations.
         winner = p.run(self.eval_genomes, 1000)
         self.evalNet(neat.nn.FeedForwardNetwork.create(winner, config))
-        os.system("/usr/bin/canberra-gtk-play --id='bell'")
+        #os.system("/usr/bin/canberra-gtk-play --id='bell'")
 
-        visualize.draw_net(config, winner, True)
-        visualize.plot_stats(stats, ylog=False, view=True)
-        visualize.plot_species(stats, view=True)
+        #visualize.draw_net(config, winner, True)
+        visualize.plot_stats(self.stats, ylog=False, view=True)
+        #visualize.plot_species(stats, view=True)
 
         print("Turns: " + str(self.circuit.getTotalTurns()))
         print("WireLength: "+str(self.circuit.getWireLength()))

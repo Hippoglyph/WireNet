@@ -146,7 +146,7 @@ class Circuit:
 		print("--------")
 
 	def getFitness(self):
-		return self.getCompletedWires()*50 - self.getWireLength()*2 - self.getTotalTurns()
+		return self.getCompletedWires()*150 - self.getWireLength()*2 - self.getTotalTurns() + (-150 if self.getCompletedWires() == 0 else 0)
 
 	def drawResult(self):
 		c = None

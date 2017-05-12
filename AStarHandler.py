@@ -46,7 +46,10 @@ class AStarHandler:
             self.circuit.restart()
             self.updateMatrix()
         #print("Best performer has fitness: ", self.bestPerformer.getFitness())
-        
+        print("Turns: " + str(self.bestPerformer.getTotalTurns()))
+        print("WireLength: "+str(self.bestPerformer.getWireLength()))
+        print("Completed Wires: "+str(self.bestPerformer.getCompletedWires()))
+        print("Fitness: "+str(self.bestPerformer.getFitness()))
         self.bestPerformer.drawResult()
         
 
