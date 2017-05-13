@@ -1,13 +1,14 @@
 \documentclass{kththesis}
 
 \usepackage{csquotes} % Recommended by biblatex
-\usepackage{biblatex}
+\usepackage[backend=bibtex]{biblatex}
 \addbibresource{references.bib} % The file containing our references, in BibTeX format
 \usepackage{graphicx}
+\usepackage{subcaption}
 
 
-\title{This is the English title}
-\alttitle{Detta är den svenska översättningen av titeln}
+\title{Machine learning neuroevolution for designing chip circuits/pathfinding}
+\alttitle{Maskininlärning nevroevolution for att designa kretskort/stigfinnare}
 \author{Jonathan Rinnarv, Pontus Brink}
 \email{osquar@kth.se}
 \supervisor{Alezander Kozlov}
@@ -63,7 +64,7 @@ The intention is to evaluate the methods on the resulting path from a chip desig
 \section{Scope}
 General pathfinding functions such as A*star and maze search are covered in this paper. As well as a comparison between these algorithms and a Neural Network trained for pathfinding. 
 
-Constructing and evaluating a chip design is a complicated thing, where a lot of variables have to be accounted for and therefore a simplified evaluation and design process is used in order to train the network and compare the results. The simplified methods are described in detail in section XXX. 
+Constructing and evaluating a chip design is a complicated thing, where a lot of variables have to be accounted for and therefore a simplified evaluation and design process is used in order to train the network and compare the results. The simplified methods are described in detail in section \ref{sec:Environment}.
 
 \section{Purpose}
 This report examines the differences between industry routing methods with the performance a trained Neural Network can produce. The purpose is to compare the more general, standard way of pathfinding in the routing process of chip circuit design to that of a trained Neural Network, taking into account variables such as speed and the resulting path. 
@@ -93,7 +94,9 @@ Year 2002 Kenneth O. Stanley and Risto Miikkulainen released a paper tackling th
 \section{Routing process}
 Routing is an important step of the integrated chip design process. It generates the wiring that connect pins of the same signal while obeying the manufacturing design rules \parencite{EDA_routing}. With the technology advancing, and the number of transistors on a single chip can reach into the billions, this challenges physical design and therefore the routing process.
 The routing process is split into global routing and detailed routing. In the global routing stage a routing region is constructed for each net on the chip and each net is given a tentative route through the set. The global routing part does not handle drawing how each wire connects, that is handled in the detailed routing process \parencite{routing11}. The global routing process essentially creates a grid with interconnected points that the detailed routing process then defines more clearly using channels and layers and also taking into account all the various parameters that affect the circuit such as interference (or crosstalk), density, heat and damage that can cause discharges \parencite{EDA_routing}. The following pictures illustrates the global routing process (picture a and b) and the detailed routing process (picture c) with a simple example
+
 \includegraphics{Routing.png}
+
 In picture A, regions that the net will use are defined. In picture B, the tentative route is given by the generated grid, the wire is allowed to be drawn through these nodes. In picture C, the detailed routing process has found a path through the grid.
 
 Both the global and detailed routing process use general pathfinding algorithms so the following sections describe two popular algorithms for pathfinding used in both these processes.
@@ -101,23 +104,26 @@ Both the global and detailed routing process use general pathfinding algorithms 
 \section{Maze search}
 Maze search is a pathfinding algorithm that uses a BFS. It is suitable to use a Maze search when you have a unweighted graph with one source node that needs to go through a number of destinations or a number of source nodes that all have the same destination \parencite{redbloggames}. These types of problems appear in both the detailed and global routing processes, making maze search a useful algorithm for pathfinding \parencite{EDA_routing}. This algorithm was invented in 1950 by E.F Moore, but later in 1961 C.Y. Lee discovered it independently and used it as a routing algorithm \parencite{idash}\parencite{lee}. 
 How maze search works is that expands outward from the starting node. It checks each neighbour node of the visited node until it finds its destination. Each time it checks a neighbour node, it increments a value on that node in order to find the shortest path to it from the starting node. For multiple destinations, the algorithm would continue from the starting node until all nodes has been reached. For multiple starting nodes, the algorithm would start from the destination instead and work the same way. The following pictures illustrates how a maze search algorithm works, where S is the starting node, T is the destination node and shaded areas are blocked and can not be routed through.
+
 \includegraphics{Mazesearch.png}
-Maze search guarantees to find a path between the starting point and the destination given that such a path exist, and it also guarantees that the found path is a shortest path. It is however slow and memory consuming, its time complexity is O(mn) where m and n is the height and width of the grid \. 
-Pseudo code for Maze search is available in Appendix [https://en.wikipedia.org/wiki/Breadth-first_search#More_details]. 
+
+Maze search guarantees to find a path between the starting point and the destination given that such a path exist, and it also guarantees that the found path is a shortest path. It is however slow and memory consuming, its time complexity is O(mn) where m and n is the height and width of the grid. 
 
 \section{A*Star}
 A*star is a heuristic pathfinding algorithm, meaning that it uses a evaluation function to determine which node to visit next. A*star is best fitted to use when you only have one starting node and one destination node. The function used is f(x) = g(x) + b(x) where g(x) is the cost of visiting the next node, and b(x) is the estimated cost from that node to the destination. \parencite{redbloggames}. An interesting note is that Maze search is a special example of A*star where b(x) = 0 for all x. Also, if b(x) has the never overestimates the cost from the current node to the destination, A*star would be optimal. If you only allow horizontal and vertical movements (Manhattan routing), b(x) could be set as the Manhattan distance to the destination, since it is the smallest distance from the current node to the destination b(x) would never overestimate the cost. A*star algorithms proposed in 1984 by and 1995 are used in modern routers. \parencite{EDA_routing}.
-Since A*star use a heuristic function, its complexity depends on the used function. If one would choose that b(x) = 0 for all x, A*star would be the same as the maze search algorithm and share its complexity. In the worst case scenario, when the search space is unbounded, its complexity would be O(db) where d is the shortest path to the destination and b is the average number of childs from each visited node \parencite{russell}. Like Maze search, A*star guarantees that if there exists a path from the starting node to the destination then A*star will find one. A*star does not however guarantee that it finds a shortest path, it depends on the quality of the used heuristic. A*star only guarantees that the found path is a shortest one if b(x) is less or equal to the actual cost, the smaller the b(x) however, the longer time A*star will take \parencite{stanford2}. Below is a picture illustrating A*star with a manhattan heuristic. The red tile is the starting node and the blue tile is the destination. The colored nodes give the b(x) value ranking from yellow to blue depending on the estimated cost where yellow is the largest cost and blue is the lowest. 
+Since A*star use a heuristic function, its complexity depends on the used function. If one would choose that b(x) = 0 for all x, A*star would be the same as the maze search algorithm and share its complexity. In the worst case scenario, when the search space is unbounded, its complexity would be O(db) where d is the shortest path to the destination and b is the average number of childs from each visited node \parencite{russell}. Like Maze search, A*star guarantees that if there exists a path from the starting node to the destination then A*star will find one. A*star does not however guarantee that it finds a shortest path, it depends on the quality of the used heuristic. A*star only guarantees that the found path is a shortest one if b(x) is less or equal to the actual cost, the smaller the b(x) however, the longer time A*star will take \parencite{stanford2}. Below is a picture illustrating A*star with a manhattan heuristic. The red tile is the starting node and the blue tile is the destination. The colored nodes give the b(x) value ranking from yellow to blue depending on the estimated cost where yellow is the largest cost and blue is the lowest.
+
 \begin{figure}[h]
 \includegraphics{AStar.png}
+\caption{A*Star pathing example}
 \end{figure}
-Pseudo code for A*star is available in appendix [https://en.wikipedia.org/wiki/A*_search_algorithm].
 
 
 
 \chapter{Method}
 This chapter describes how the Neural Network was constructed, how A*star and BFS was implemented and how the results were generated.
 \section{Environment}
+\label{sec:Environment}
 Because of time constraints in this course and the fact that circuits are extremely complex, restrictions have to be set to the routing environment. First we assume that chip circuits are only two dimensional and the parameters for evaluating a circuit are only wire length and amount of wire turns.
 
 The simplified circuit are represented in the form of a two dimensional bit matrix where the value of 1 represent a unpathable tile and the value of 0 represent pathable tile. This matrix will change during the wiring process, laying down a wire will switch a tile from pathable to unpathable. 
@@ -145,117 +151,225 @@ The A*star and BFS algorithms were implemented using the pseudo code in the appe
 
 
 \chapter{Result}
+
 This chapter presents the result of the testing of the algorithms
-\begin{figure}[h]
-\begin{subfigure}{0.3\textwidth}
-\includegraphics{EasyCircuit1Base.png}
-\end{subfigure}
-\begin{subfigure}{0.3\textwidth}
-\includegraphics{EasyCircuit1AStar.png}
-\end{subfigure}
-\begin{subfigure}{0.3\textwidth}
-\includegraphics{EasyCircuit1NEAT.png}
-\end{subfigure}
-\end{figure}
-This is the first test we used to compare the algorithms. Both BFS and A*star resulted in the same path with a fitness of 43. NEAT achieved a fitness of 77. This is a 79\% better fitness than A*star and BFS.
+
+\section{Test 1}
 
 \begin{figure}[h]
-\begin{subfigure}{0.3\textwidth}
-\includegraphics{Circuit2AStar.png}
-\end{subfigure}
-\begin{subfigure}{0.3\textwidth}
-\includegraphics{Circuit2BFS.png}
-\end{subfigure}
-\begin{subfigure}{0.3\textwidth}
-\includegraphics{Circuit2NEAT.png}
-\end{subfigure}
+{\centering
+
+\begin{minipage}{0.3\textwidth}
+\centering
+\includegraphics[width=\linewidth]{EasyCircuit1Base.png}
+\caption{Base}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\centering
+\includegraphics[width=\linewidth]{EasyCircuit1AStar.png}
+\caption{A*}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\centering
+\includegraphics[width=\linewidth]{EasyCircuit1NEAT.png}
+\caption{NEAT 0 hidden nodes}
+\end{minipage}\hfill
+\caption{Test 1 - NEAT generated 0 hidden nodes}
+\label{Test 1}
+}
+
 \end{figure}
+
+This is the first test we used to compare the algorithms. Both BFS and A*star resulted in the same path with a fitness of 43. NEAT achieved a fitness of 77. This is a 79\% better fitness than A*star and BFS.
+
+\section{Test 2}
+
+\begin{figure}[h]
+{\centering
+
+\begin{minipage}{0.3\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit2AStar.png}
+\caption{A*}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit2BFS.png}
+\caption{BFS}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit2NEAT.png}
+\caption{NEAT 0 hidden nodes}
+\end{minipage}\hfill
+\caption{Test 2 - NEAT generated 0 hidden nodes}
+\label{Test 2}
+}
+
+\end{figure}
+
 This is the second test used to compare the algorithms. BFS, A*star and NEAT all gave different results, with A*star achieving a fitness of 142, BFS a fitness of 154 and NEAT a fitness of 152. NEAT its best solution after only five generations, but it was run for 150 generations.
 
 
+\section{Test 3}
+
 \begin{figure}[h]
-\begin{subfigure}{0.5\textwidth}
-\includegraphics{Circuit3Base.png}
-\end{subfigure}
-\begin{subfigure}{0.5\textwidth}
-\includegraphics{Circuit3Neat.png}
-\end{subfigure}
+{\centering
+
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit3Base.png}
+\caption{Base}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit3Neat.png}
+\caption{A*, BFS and NEAT 0 hidden nodes}
+\end{minipage}\hfill
+\caption{Test 3 - NEAT generated 0 hidden nodes}
+\label{Test 3}
+}
+
 \end{figure}
+
 The third test we used is impossible to complete all the wires. In this test, every algorithm constructed the same paths and was able to find one of the best solutions with a fitness of 176.
 
+\section{Test 4}
 
 \begin{figure}[h]
-\begin{subfigure}{0.25\textwidth}
-\includegraphics{Circuit4BASE.png}
-\end{subfigure}
-\begin{subfigure}{0.25\textwidth}
-\includegraphics{Circuit4NEAT400gen.png}
-\end{subfigure}
-\begin{subfigure}{0.25\textwidth}
-\includegraphics{Circuit4gen600.png}
-\end{subfigure}
-\begin{subfigure}{0.25\textwidth}
-\includegraphics{Circuit3AStar.png}
-\end{subfigure}
+{\centering
+
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit4BASE.png}
+\caption{Base}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit4NEAT400gen.png}
+\caption{NEAT after 173 generation. 4 hidden nodes}
+\end{minipage}\hfill
+
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit4gen600.png}
+\caption{NEAT after 578 generations. 5 hidden nodes}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit4AStar.png}
+\caption{A*}
+\end{minipage}\hfill
+\caption{Test 4 - NEAT generated 5 hidden nodes}
+\label{Test 4}
+}
+
 \end{figure}
-Pic1 generation 173 (F 148). NEAT 600 generations Fitness: 185, A*Star fitness 204, BFS Fitness 204.
+
+NEAT after 173 generation acquired a fitness score of 148. NEAT after 578 generation acquired a fitness score of 185. A*Star scored a fitness of 204.
 
 \begin{figure}[h]
-\begin{subfigure}{0.5\textwidth}
-\includegraphics{Circuit4Neat600gen.png}
-\end{subfigure}
+{\centering
+\begin{minipage}{1\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Circuit4Neat600gen.png}
+\end{minipage}\hfill
+\caption{Test 4 - NEAT Fitness graph}
+}
+The best fitness was found at generation 578. The best fit curve steadily increases early and begins to converge at 270 generations while the average does not increase during the session. 
 \end{figure}
-The best fitness was found at generation 578, with one less turn than the previous best. The best fit curve steadily increases early and begins to converge at 270 generations while the average does not increase during the session. 
 
+\newpage
 
+\section{Test 5}
 
-\begin{figure}[h]
-\begin{subfigure}{0.2\textwidth}
-\includegraphics{BIGBase.png}
-\end{subfigure}
-\begin{subfigure}{0.2\textwidth}
-\includegraphics{BIGNeat150gen.png}
-\end{subfigure}
-\begin{subfigure}{0.2\textwidth}
-\includegraphics{BIGNEAT300Gens.png}
-\end{subfigure}
-\begin{subfigure}{0.2\textwidth}
-\includegraphics{BIGAStar.png}
-\end{subfigure}
-\begin{subfigure}{0.2\textwidth}
-\includegraphics{BIGBFS.png}
-\end{subfigure}
+This is a test with a grid of size 35x35 with five wires to path. NEAT had 1245 inputs and 20 output.
+
+\begin{figure}
+\centering
+
+\begin{minipage}{1\textwidth}
+\centering
+\includegraphics[width=\linewidth]{BIGBase.png}
+\end{minipage}\hfill
+\caption{Test 5 - Base. Grid of size 35x35 with 5 wires}
+\label{Test 5 Base}
 \end{figure}
-Big NEAT 300 generations Fitness: 8, NEAT 150 generations Fitness: -72, A*star fitness 296, BFS Fitness 296. A*star and BFS got a fitness 3700\% higher than the best NEAT neural net could generate within its session.
 
+\begin{figure}
+\centering
 
-\begin{figure}[h]
-\begin{subfigure}{0.2\textwidth}
-\includegraphics{BIGBase.png}
-\end{subfigure}
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{BIGAStar}
+\caption{A*}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth]{BIGBFS.png}
+\caption{BFS}
+\end{minipage}\hfill
+\caption{Test 5 - A* and BFS}
+\label{Test 5 A*}
 \end{figure}
-The best solution was found in generation 61. NEAT was able to improve its best evaluated neural net three times during its session.
+
+\begin{figure}
+\centering
+\begin{minipage}{1\textwidth}
+\centering
+\includegraphics[width=\linewidth]{BIGNeat150gen.png}
+\end{minipage}\hfill
+\caption{Test 5 - NEAT After 26 generations. 0 hidden nodes}
+\label{Test 5 26}
+\end{figure}
+
+\begin{figure}
+{\centering
+\begin{minipage}{1\textwidth}
+\centering
+\includegraphics[width=\linewidth]{BIGNEAT300Gens.png}
+\end{minipage}\hfill
+\caption{Test 5 - NEAT After 300 generations. 1 hidden nodes}
+\label{Test 5 300}
+}
+NEAT 300 generations Fitness: 8, NEAT 150 generations Fitness: -72, A*star fitness 296, BFS Fitness 296. A*star and BFS got a fitness 3700\% higher than the best NEAT neural net could generate within its session.
+\end{figure}
+
+\begin{figure}
+{\centering
+\begin{minipage}{1\textwidth}
+\centering
+\includegraphics[width=\linewidth]{BIG300Gens.png}
+\end{minipage}\hfill
+\caption{Test 5 - NEAT Fitness graph}
+\label{Test 5 graph}
+}
+The best solution was found in generation 31. A step climb in best fitness early along with average fitness. But 250 generations later still no improvment.
+\end{figure}
+
+
 
 \chapter{Discussion}
-The first test FIGURE1-3 was the only test that resulted in NEAT vastly outperforming both BFS and A*star. NEAT is able to take into account amount of turns, where A*star used manhattan distance as a heuristic which makes a vertical step and a horizontal step equal in distance. The shortest path generated by BFS and A*star created a stair-shape which resulted in a lot of turns, getting less fitness, even tho the path is equally long. 
+The first test (Figure: \ref{Test 1}) was the only test that resulted in NEAT vastly outperforming both BFS and A*star. NEAT is able to take into account amount of turns, where A*star used manhattan distance as a heuristic which makes a vertical step and a horizontal step equal in distance. The shortest path generated by BFS and A*star created a stair-shape which resulted in a lot of turns, getting less fitness, even tho the path is equally long. 
 
-In the second test FIGURE4-6 all algorithms got very similar fitness even though they have distinct solutions. The NEAT solution was found very quickly, but was unable to correct its error of having a unnecessary turn within the session. This could be a result of a poorly designed fitness function that does not punish turns enough. 
+In the second test (Figure: \ref{Test 2}) all algorithms got very similar fitness even though they have distinct solutions. The NEAT solution was found very quickly, but was unable to correct its error of having a unnecessary turn within the session. This could be a result of a poorly designed fitness function that does not punish turns enough. 
 
-In the third test FIGURE7-8 all algorithms produced the same, optimal, result. This is interesting because there are multiple optimal solutions to this problem. BFS and A*Star both goes through all possible orderings of wires and uses the one that generated the best fitness, it is pure chance that NEAT created the exact same solution. 
+In the third test (Figure: \ref{Test 3}) all algorithms produced the same, optimal, result. This is interesting because there are multiple optimal solutions to this problem. BFS and A*Star both goes through all possible orderings of wires and uses the one that generated the best fitness, it is pure chance that NEAT created the exact same solution. 
 
-In the fourth test FIGURE9-13, NEAT was not able to perform at A*star and BFS level. For many generations, NEAT refused the path the green wire to its destination. Instead it insisted of shortening the wire length. This is unwanted behaviour that could be a result of poorly designed fitness function. As the fitness function is written now, wires get punished while pathing until the destination is reached. Only on arrival does the fitness increase. Adding more parameters, such as distance to destination, might have resolved some of these situations, but could also create other unwanted behaviours such as pathing a wire straight ahead as close to its destination as possible. The extra bits of wire seen in figure 10 on the green and purple wires could be a result of NEAT sets up a priority order to move and without further analysis of the input these bits are required.
+In the fourth test (Figure: \ref{Test 4}), NEAT was not able to perform at A*star and BFS level. For many generations, NEAT refused the path the green wire to its destination. Instead it insisted of shortening the wire length. This is unwanted behaviour that could be a result of poorly designed fitness function. As the fitness function is written now, wires get punished while pathing until the destination is reached. Only on arrival does the fitness increase. Adding more parameters, such as distance to destination, might have resolved some of these situations, but could also create other unwanted behaviours such as pathing a wire straight ahead as close to its destination as possible. The extra bits of wire seen in figure 10 on the green and purple wires could be a result of NEAT sets up a priority order to move and without further analysis of the input these bits are required.
 
-In the fifth test FIGURE14-18, NEAT was not able to compete with A*star or BFS. The size of the grid in this test was larger than previous test and wires had long way to path. Since pathing is punished by the fitness function NEAT opted to minimize wire length instead. This resulted in NEAT having a hard time solving the problem. 
+In the fifth test (Figure: \ref{Test 5 Base} - \ref{Test 5 graph}), NEAT was not able to compete with A*star or BFS. The size of the grid in this test was larger than previous test and wires had long way to path. Since pathing is punished by the fitness function NEAT opted to minimize wire length instead. This resulted in NEAT having a hard time solving the problem. 
 
 \section{Pathing choice}
-Since the neural network do not have the option of doing no move at all a wire the can move always will. Because wire length is punished by our fitness function NEAT seem to prefer to minimize wire length by moving itself into a corner to cut out possible moves as can be seen in FIGURECircuit3NEATToDo. In FIGUREGen300BigNEAT it seems like another wire cuts of another to minimize wire length. This could be the result of a poorly written fitness function.
+Since the neural network do not have the option of doing no move at all a wire the can move always will. Because wire length is punished by our fitness function NEAT seem to prefer to minimize wire length by moving itself into a corner to cut out possible moves as can be seen in figure \ref{Test 3}. Figure \ref{Test 5 300} it seems like another wire cuts of another to minimize wire length. This could be the result of a poorly written fitness function.
 
 The low number of hidden inputs generated via NEAT indicates that not much analysis of the input are being made. Input are usually connected directly to output with no in between nodes. Since the highest rated action is not always chosen (in the case that it is illegal) so the network wish to go one way but it goes another, if that happens to be the right way it gets rewarded for attempting to go the wrong way. This indicates that NEAT creates an internal priority list of moves for each wire. A priority list is enough to wire small grids but more analysis is required for larger grids.
 
+\chapter{Conclusion}
+
+Todo..
 
 \printbibliography[heading=bibintoc] % Print the bibliography (and make it appear in the table of contents)
-
-
 
 
 
