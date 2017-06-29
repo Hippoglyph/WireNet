@@ -5,6 +5,7 @@
 \addbibresource{references.bib} % The file containing our references, in BibTeX format
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{pdfpages}
  
  
 \title{Machine learning - neuroevolution for designing chip circuits/pathfinding}
@@ -19,6 +20,8 @@
  
  
 \begin{document}
+
+\includepdf[pages={1}]{cover.pdf}
  
 % Frontmatter includes the titlepage, abstracts and table-of-contents
 \frontmatter
@@ -524,6 +527,7 @@ function reconstruct_path(cameFrom, current)
     return total_path
 \end{verbatim}
  
+\includepdf[pages={2}]{cover.pdf}
  
 \end{document}
  
